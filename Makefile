@@ -23,7 +23,7 @@ BUILD_NUMBER ?= $(RELEASE_VERSION)
 
 J ?= $(shell if command -v nproc >/dev/null 2>&1; then nproc; elif command -v sysctl >/dev/null 2>&1; then sysctl -n hw.ncpu; else echo 4; fi)
 
-.PHONY: default all ci build schemas compile-schemas package install deploy uninstall clean dist check-deps lint version
+.PHONY: default all ci build schemas compile-schemas package install deploy uninstall clean dist check-deps lint version test
 
 default: all
 
@@ -114,6 +114,15 @@ lint:
 		echo "Checking $$f"; \
 	done
 	@echo "Lint complete."
+
+test:
+	@echo "Running unit tests..."
+	@if command -v gjs >/dev/null 2>&1; then \
+		cd $(EXTENSION_DIR) && gjs -m test_sun_calculator.js; \
+	else \
+		echo "ERROR: gjs not found. Install with: sudo apt install gjs"; \
+		exit 1; \
+	fi
 
 dist: package
 	@echo "Distribution archive at $(DIST_DIR)/$(PACKAGE_NAME)"

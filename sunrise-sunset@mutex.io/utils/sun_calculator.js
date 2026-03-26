@@ -4,17 +4,17 @@
  * using the NOAA solar equations. All times are returned in local time.
  */
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 
 const DEG2RAD = Math.PI / 180.0;
 const RAD2DEG = 180.0 / Math.PI;
 
 const SUN_EVENT_ANGLES = {
-    sunrise_sunset: -0.833,
-    civil: -6.0,
-    nautical: -12.0,
-    astronomical: -18.0,
+    sunrise_sunset: -0.833,  // sun 0.833° below horizon (upper limb)
+    civil: -6.0,             // sun 6° below horizon
+    nautical: -12.0,       // sun 12° below horizon
+    astronomical: -18.0,   // sun 18° below horizon
 };
 
 function _julianDay(year, month, day) {
@@ -105,14 +105,13 @@ function _earthOrbitEccentricity(julianCentury) {
     return 0.016708634 - julianCentury * (0.000042037 + 0.0000001267 * julianCentury);
 }
 
-function _hourAngle(latitude, declination, zenith) {
+function _hourAngle(latitude, declinationRad, zenith) {
     const latRad = latitude * DEG2RAD;
     const cosHA =
-        (Math.sin(zenith * DEG2RAD) - Math.sin(latRad) * Math.sin(declination)) /
-        (Math.cos(latRad) * Math.cos(declination));
+        (Math.cos(zenith * DEG2RAD) - Math.sin(latRad) * Math.sin(declinationRad)) /
+        (Math.cos(latRad) * Math.cos(declinationRad));
 
-    if (cosHA > 1.0) return null;
-    if (cosHA < -1.0) return null;
+    if (cosHA > 1.0 || cosHA < -1.0) return null;
 
     return Math.acos(cosHA);
 }
@@ -128,14 +127,22 @@ function _computeSunEventTime(date, latitude, longitude, zenith, isSunrise) {
     const eqTime = _equationOfTime(jc);
     const declination = _solarDeclination(jc);
 
-    const HA = _hourAngle(latitude, declination * RAD2DEG, zenith);
+    const HA = _hourAngle(latitude, declination, zenith);
     if (HA === null) return null;
 
     const HAdeg = HA * RAD2DEG;
+    // NOAA convention: sunrise is before noon (-), sunset is after noon (+)
     const sign = isSunrise ? -1 : 1;
 
-    let solarNoon = 720 - 4 * longitude - eqTime + sign * HAdeg * 4;
-    let localMinutes = solarNoon % 1440;
+    // Calculate UTC time of the event in minutes
+    // NOAA formula: 720 - 4*longitude - eqTime ± HA*4
+    let utcMinutes = 720 - 4 * longitude - eqTime + sign * HAdeg * 4;
+    utcMinutes = utcMinutes % 1440;
+    if (utcMinutes < 0) utcMinutes += 1440;
+
+    // Convert UTC to local time
+    const tzOffsetMinutes = date.getTimezoneOffset();
+    let localMinutes = (utcMinutes - tzOffsetMinutes) % 1440;
     if (localMinutes < 0) localMinutes += 1440;
 
     return localMinutes;
@@ -147,7 +154,7 @@ function _minutesToTimeStr(minutes) {
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 
-function computeAllSunTimes(latitude, longitude, date = null) {
+export function computeAllSunTimes(latitude, longitude, date = null) {
     if (!date) {
         date = new Date();
     }
@@ -155,19 +162,22 @@ function computeAllSunTimes(latitude, longitude, date = null) {
     const results = {};
 
     for (const [key, angle] of Object.entries(SUN_EVENT_ANGLES)) {
+        // angle is negative (sun below horizon), so zenith = 90 - angle = 90 + |angle|
+        const zenith = 90 - angle;
+        
         if (key === 'sunrise_sunset') {
             const sunriseMin = _computeSunEventTime(
                 date,
                 latitude,
                 longitude,
-                -angle,
+                zenith,
                 true
             );
             const sunsetMin = _computeSunEventTime(
                 date,
                 latitude,
                 longitude,
-                -angle,
+                zenith,
                 false
             );
             results.sunrise = sunriseMin !== null ? _minutesToTimeStr(sunriseMin) : null;
@@ -177,14 +187,14 @@ function computeAllSunTimes(latitude, longitude, date = null) {
                 date,
                 latitude,
                 longitude,
-                -angle,
+                zenith,
                 true
             );
             const setMin = _computeSunEventTime(
                 date,
                 latitude,
                 longitude,
-                -angle,
+                zenith,
                 false
             );
             results[`${key}_sunrise`] = riseMin !== null ? _minutesToTimeStr(riseMin) : null;
@@ -195,7 +205,7 @@ function computeAllSunTimes(latitude, longitude, date = null) {
     return results;
 }
 
-function getGeolocationFromTimezone() {
+export function getGeolocationFromTimezone() {
     const tz = GLib.TimeZone.new_local().get_identifier();
 
     const fallback = {

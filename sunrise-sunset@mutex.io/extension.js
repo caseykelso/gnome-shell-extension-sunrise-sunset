@@ -4,14 +4,17 @@
  * information in a popup menu.
  */
 
-const { GObject, St, Clutter, Gio, GLib } = imports.gi;
-const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import GObject from 'gi://GObject';
+import St from 'gi://St';
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const SunCalculator = Me.imports.utils.sun_calculator;
+import * as SunCalculator from './utils/sun_calculator.js';
 
 const SunriseSunsetIndicator = GObject.registerClass(
     {},
@@ -89,7 +92,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
             this._settingsItem = new PopupMenu.PopupMenuItem('Settings');
             this._settingsItem.connect('activate', () => {
                 try {
-                    ExtensionUtils.openPrefs();
+                    this.openPreferences();
                 } catch (e) {
                     log('sunrise-sunset: Could not open prefs: ' + e.message);
                 }
@@ -97,33 +100,33 @@ const SunriseSunsetIndicator = GObject.registerClass(
             this.menu.addMenuItem(this._settingsItem);
         }
 
-        _loadLocation() {
-            try {
-                const settings = ExtensionUtils.getSettings(
-                    'org.gnome.shell.extensions.sunrise-sunset'
-                );
-                const manualLat = settings.get_double('latitude');
-                const manualLon = settings.get_double('longitude');
-                const useManual = settings.get_boolean('use-manual-location');
+    _loadLocation() {
+        try {
+            const settings = this.getSettings(
+                'org.gnome.shell.extensions.sunrise-sunset'
+            );
+            const manualLat = settings.get_double('latitude');
+            const manualLon = settings.get_double('longitude');
+            const useManual = settings.get_boolean('use-manual-location');
 
-                if (useManual) {
-                    this._geo = {
-                        lat: manualLat,
-                        lon: manualLon,
-                        name: `${manualLat.toFixed(2)}, ${manualLon.toFixed(2)}`,
-                    };
-                } else {
-                    this._geo = SunCalculator.getGeolocationFromTimezone();
-                }
-
-                this._connectSettings(settings);
-            } catch (e) {
-                log('sunrise-sunset: Could not load settings: ' + e.message);
+            if (useManual) {
+                this._geo = {
+                    lat: manualLat,
+                    lon: manualLon,
+                    name: `${manualLat.toFixed(2)}, ${manualLon.toFixed(2)}`,
+                };
+            } else {
                 this._geo = SunCalculator.getGeolocationFromTimezone();
             }
 
-            this._refresh();
+            this._connectSettings(settings);
+        } catch (e) {
+            log('sunrise-sunset: Could not load settings: ' + e.message);
+            this._geo = SunCalculator.getGeolocationFromTimezone();
         }
+
+        this._refresh();
+    }
 
         _connectSettings(settings) {
             if (this._settingsChangedId) return;
@@ -246,20 +249,20 @@ const SunriseSunsetIndicator = GObject.registerClass(
                 this._settings.disconnect(this._settingsChangedId);
                 this._settingsChangedId = null;
             }
-            super.destroy();
-        }
+        super.destroy();
     }
+}
 );
 
-class Extension {
-    constructor(uuid) {
-        this._uuid = uuid;
+export default class SunriseSunsetExtension extends Extension {
+    constructor(metadata) {
+        super(metadata);
         this._indicator = null;
     }
 
     enable() {
         this._indicator = new SunriseSunsetIndicator();
-        Main.panel.addToStatusArea('sunrise-sunset', this._indicator);
+        Main.panel.addToStatusArea(this.uuid, this._indicator);
     }
 
     disable() {
