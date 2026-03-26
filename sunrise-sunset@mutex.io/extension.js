@@ -156,6 +156,11 @@ const SunriseSunsetIndicator = GObject.registerClass(
         _updateMenu(times) {
             this._rowsBox.destroy_all_children();
 
+            const date = new Date();
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            const dateStr = date.toLocaleDateString(undefined, options);
+            this._menuTitle.set_text(`Sunrise & Sunset\n${dateStr}`);
+
             if (this._geo) {
                 this._locationLabel.set_text(
                     `${this._geo.name}`

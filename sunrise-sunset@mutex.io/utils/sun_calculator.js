@@ -117,9 +117,10 @@ function _hourAngle(latitude, declinationRad, zenith) {
 }
 
 function _computeSunEventTime(date, latitude, longitude, zenith, isSunrise) {
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth() + 1;
-    const day = date.getUTCDate();
+    // Use LOCAL date to determine which calendar day to calculate for
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
 
     const JD = _julianDay(year, month, day);
     const jc = (JD - 2451545.0) / 36525.0;

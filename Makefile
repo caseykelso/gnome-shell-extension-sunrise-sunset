@@ -23,7 +23,7 @@ BUILD_NUMBER ?= $(RELEASE_VERSION)
 
 J ?= $(shell if command -v nproc >/dev/null 2>&1; then nproc; elif command -v sysctl >/dev/null 2>&1; then sysctl -n hw.ncpu; else echo 4; fi)
 
-.PHONY: default all ci build schemas compile-schemas package install deploy uninstall clean dist check-deps lint version test
+.PHONY: default all ci build schemas compile-schemas package install deploy uninstall clean dist check-deps lint version test gnome-nested
 
 default: all
 
@@ -123,6 +123,10 @@ test:
 		echo "ERROR: gjs not found. Install with: sudo apt install gjs"; \
 		exit 1; \
 	fi
+
+gnome-nested:
+	@echo "Starting nested GNOME Shell..."
+	@dbus-run-session -- gnome-shell --nested --wayland
 
 dist: package
 	@echo "Distribution archive at $(DIST_DIR)/$(PACKAGE_NAME)"
