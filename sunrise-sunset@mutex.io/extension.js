@@ -28,9 +28,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
             });
 
             this._icon = new St.Icon({
-                gicon: Gio.icon_new_for_string(
-                    `${Me.path}/icons/sun-symbolic.svg`
-                ),
+                gicon: Gio.ThemedIcon.new('weather-clear-symbolic'),
                 style_class: 'sunrise-sunset-panel-icon',
             });
 
@@ -59,7 +57,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
                 vertical: true,
             });
 
-            this._menuItem.actor.add_child(this._menuContent);
+            this._menuItem.add_child(this._menuContent);
             this.menu.addMenuItem(this._menuItem);
 
             this._menuTitle = new St.Label({
@@ -90,7 +88,11 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
             this._settingsItem = new PopupMenu.PopupMenuItem('Settings');
             this._settingsItem.connect('activate', () => {
-                ExtensionUtils.openPrefs();
+                try {
+                    ExtensionUtils.openPrefs();
+                } catch (e) {
+                    log('sunrise-sunset: Could not open prefs: ' + e.message);
+                }
             });
             this.menu.addMenuItem(this._settingsItem);
         }
@@ -116,6 +118,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
                 this._connectSettings(settings);
             } catch (e) {
+                log('sunrise-sunset: Could not load settings: ' + e.message);
                 this._geo = SunCalculator.getGeolocationFromTimezone();
             }
 
@@ -152,35 +155,31 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
             if (this._geo) {
                 this._locationLabel.set_text(
-                    `\uD83D\uDCCD ${this._geo.name}`
+                    `${this._geo.name}`
                 );
             }
 
             const rows = [
                 {
                     label: 'Sunrise / Sunset',
-                    icon: '\u2600\uFE0F',
                     sunrise: times.sunrise,
                     sunset: times.sunset,
                     cssClass: 'standard',
                 },
                 {
                     label: 'Civil Twilight',
-                    icon: '\uD83C\uDF05',
                     sunrise: times.civil_sunrise,
                     sunset: times.civil_sunset,
                     cssClass: 'civil',
                 },
                 {
                     label: 'Nautical Twilight',
-                    icon: '\uD83D\uDEA2',
                     sunrise: times.nautical_sunrise,
                     sunset: times.nautical_sunset,
                     cssClass: 'nautical',
                 },
                 {
                     label: 'Astronomical Twilight',
-                    icon: '\uD83C\uDF03',
                     sunrise: times.astronomical_sunrise,
                     sunset: times.astronomical_sunset,
                     cssClass: 'astronomical',
@@ -190,11 +189,6 @@ const SunriseSunsetIndicator = GObject.registerClass(
             for (const row of rows) {
                 const rowBox = new St.BoxLayout({
                     style_class: `sunrise-sunset-row ${row.cssClass}`,
-                });
-
-                const iconLabel = new St.Label({
-                    style_class: 'sunrise-sunset-row-icon',
-                    text: row.icon,
                 });
 
                 const nameLabel = new St.Label({
@@ -225,7 +219,6 @@ const SunriseSunsetIndicator = GObject.registerClass(
                 timeBox.add_child(separator);
                 timeBox.add_child(sunsetLabel);
 
-                rowBox.add_child(iconLabel);
                 rowBox.add_child(nameLabel);
                 rowBox.add_child(timeBox);
 
