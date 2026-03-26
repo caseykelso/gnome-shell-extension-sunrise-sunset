@@ -71,10 +71,43 @@ This runs all targets: schema compilation and package building.
 | `make schemas` | Compile GSettings schema |
 | `make package` | Build zip in `dist/` |
 | `make install` | Install to `~/.local/share/gnome-shell/extensions/` |
+| `make deploy` | Remove old install, reinstall, and reload extension |
 | `make uninstall` | Remove installed extension |
 | `make clean` | Remove build artifacts |
 | `make dist` | Same as `package` |
+| `make version` | Print current version from git tag or branch |
 | `make check-deps` | Verify build dependencies |
+
+## Deploy for Local Testing
+
+The fastest way to iterate during development:
+
+```bash
+make deploy
+```
+
+This will:
+1. Compile schemas
+2. Package the extension
+3. Remove any existing installation
+4. Install fresh
+5. Auto-reload the extension (if GNOME Shell is running)
+
+For rapid iteration with live reload, just keep running `make deploy`.
+
+## Releases
+
+Push a version tag to trigger a release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This triggers CI to:
+1. Build and package the extension
+2. Create a GitHub Release with the zip attached
+3. Upload to extensions.gnome.org (requires `EGO_TOKEN` secret)
 
 ## Installation Methods
 
@@ -158,6 +191,18 @@ rm -rf ~/.local/share/gnome-shell/extensions/sunrise-sunset@mutex.io
 ## License
 
 MIT
+
+## CI/CD
+
+GitHub Actions runs on every push and PR. The workflow uses `make ci` for parity with local builds.
+
+### Secrets
+
+| Secret | Required | Description |
+|--------|----------|-------------|
+| `EGO_TOKEN` | No | API token for extensions.gnome.org uploads |
+
+To create the token, go to [extensions.gnome.org/api/tokens](https://extensions.gnome.org/api/tokens/).
 
 ## Author
 
