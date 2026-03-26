@@ -1,0 +1,123 @@
+/* sunrise-sunset@mutex.io - Stylesheet
+ *
+ * Dark theme. Accent: #7ef1b3, panel: rgba(19,24,39,0.85), bg: #05080f
+ */
+
+/* ─── Panel button ────────────────────────────────────────────────── */
+
+.sunrise-sunset-panel-box {
+    spacing: 4px;
+    padding: 0 6px;
+}
+
+.sunrise-sunset-panel-icon {
+    icon-size: 16px;
+}
+
+.sunrise-sunset-panel-label {
+    font-size: 0.8rem;
+    color: #f3f6ff;
+    font-weight: 500;
+}
+
+/* ─── Popup menu container ────────────────────────────────────────── */
+
+.sunrise-sunset-menu-content {
+    min-width: 320px;
+    padding: 12px 16px;
+    spacing: 8px;
+}
+
+.sunrise-sunset-menu-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #7ef1b3;
+    padding-bottom: 4px;
+}
+
+.sunrise-sunset-location {
+    font-size: 0.82rem;
+    color: rgba(203, 211, 235, 0.65);
+    padding-bottom: 6px;
+}
+
+/* ─── Data rows ───────────────────────────────────────────────────── */
+
+.sunrise-sunset-rows {
+    spacing: 4px;
+}
+
+.sunrise-sunset-row {
+    spacing: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sunrise-sunset-row.standard {
+    background: rgba(126, 241, 179, 0.08);
+    border-color: rgba(126, 241, 179, 0.15);
+}
+
+.sunrise-sunset-row.civil {
+    background: rgba(103, 213, 255, 0.07);
+    border-color: rgba(103, 213, 255, 0.12);
+}
+
+.sunrise-sunset-row.nautical {
+    background: rgba(98, 84, 255, 0.08);
+    border-color: rgba(98, 84, 255, 0.14);
+}
+
+.sunrise-sunset-row.astronomical {
+    background: rgba(160, 80, 255, 0.08);
+    border-color: rgba(160, 80, 255, 0.14);
+}
+
+.sunrise-sunset-row-icon {
+    font-size: 1rem;
+    min-width: 24px;
+}
+
+.sunrise-sunset-row-name {
+    font-size: 0.85rem;
+    color: #f3f6ff;
+    font-weight: 500;
+    flex: 1;
+}
+
+.sunrise-sunset-row-times {
+    spacing: 6px;
+}
+
+.sunrise-sunset-time {
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 48px;
+    text-align: right;
+}
+
+.sunrise-sunset-time.sunrise {
+    color: #7ef1b3;
+}
+
+.sunrise-sunset-time.sunset {
+    color: #ff9e64;
+}
+
+.sunrise-sunset-time-separator {
+    font-size: 0.75rem;
+    color: rgba(203, 211, 235, 0.45);
+    min-width: 16px;
+    text-align: center;
+}
+
+/* ─── Context labels ──────────────────────────────────────────────── */
+
+.sunrise-sunset-context {
+    font-size: 0.7rem;
+    color: rgba(203, 211, 235, 0.45);
+    padding-left: 34px;
+    margin-top: -2px;
+}

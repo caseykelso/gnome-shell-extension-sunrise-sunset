@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglib2.0-dev glib-compile-schemas zip
+
+      - name: Check dependencies
+        run: make check-deps
+
+      - name: Build (make ci)
+        run: make ci
+
+      - name: Verify package exists
+        run: |
+          test -f dist/sunrise-sunset@mutex.io.zip && echo "Package OK" || (echo "Package missing" && exit 1)
+          echo "Package size: $(du -h dist/sunrise-sunset@mutex.io.zip | cut -f1)"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-sunset-extension
+          path: dist/sunrise-sunset@mutex.io.zip
+          retention-days: 30
+
+  release:
+    name: GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sunrise-sunset-extension
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: dist/sunrise-sunset@mutex.io.zip
+
+  gnome-extensions-upload:
+    name: Upload to extensions.gnome.org
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sunrise-sunset-extension
+          path: dist/
+
+      - name: Upload to extensions.gnome.org
+        env:
+          EGO_TOKEN: ${{ secrets.EGO_TOKEN }}
+        run: |
+          echo "Uploading to extensions.gnome.org..."
+          echo "EGO_TOKEN is $([ -n "$EGO_TOKEN" ] && echo 'set' || echo 'NOT SET - configure EGO_TOKEN secret')"
+          if [ -z "$EGO_TOKEN" ]; then
+            echo "::warning::EGO_TOKEN secret not configured. Skipping extensions.gnome.org upload."
+            echo "To enable: Settings > Secrets > Actions > New: EGO_TOKEN"
+            exit 0
+          fi
+
+          # Upload via extensions.gnome.org REST API
+          # POST /api/upload with Bearer token and zip file
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Token $EGO_TOKEN" \
+            -F "source=@dist/sunrise-sunset@mutex.io.zip" \
+            https://extensions.gnome.org/api/upload)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Upload successful!"
+          else
+            echo "::error::Upload failed with HTTP $HTTP_CODE"
+            exit 1
+          fi

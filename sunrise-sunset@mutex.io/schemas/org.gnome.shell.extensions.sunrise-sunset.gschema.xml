@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="sunrise-sunset@mutex.io">
+  <schema id="org.gnome.shell.extensions.sunrise-sunset"
+          path="/org/gnome/shell/extensions/sunrise-sunset/">
+    <key name="use-manual-location" type="b">
+      <default>false</default>
+      <summary>Use manual location</summary>
+      <description>If true, latitude and longitude are used instead of timezone-based detection.</description>
+    </key>
+    <key name="latitude" type="d">
+      <default>40.7128</default>
+      <summary>Latitude</summary>
+      <description>Latitude in decimal degrees for manual location mode.</description>
+    </key>
+    <key name="longitude" type="d">
+      <default>-74.006</default>
+      <summary>Longitude</summary>
+      <description>Longitude in decimal degrees for manual location mode.</description>
+    </key>
+  </schema>
+</schemalist>
