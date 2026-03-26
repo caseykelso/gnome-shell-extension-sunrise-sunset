@@ -77,6 +77,7 @@ This runs all targets: schema compilation and package building.
 | `make dist` | Same as `package` |
 | `make test` | Run unit tests |
 | `make gnome-nested` | Start nested GNOME Shell for testing |
+| `make restart-shell` | Restart GNOME Shell (restores window positions) |
 | `make version` | Print current version from git tag or branch |
 | `make check-deps` | Verify build dependencies |
 
@@ -112,6 +113,18 @@ Alt+F2, type "r", press Enter
 ```
 
 This reloads the shell with your changes but **resets window positions**. Fast but disruptive.
+
+#### Option 2: Make restart-shell (X11 only)
+
+Restart the shell while preserving window positions:
+
+```bash
+make restart-shell
+```
+
+This saves window positions to `/tmp/gnome-shell-windows.state`, restarts the shell via dbus, waits 4 seconds, then restores all windows to their original positions.
+
+Requires: `wmctrl` (`sudo apt install wmctrl`)
 
 #### Option 2: Nested Shell (Recommended)
 
