@@ -4,7 +4,7 @@
     "description": "Displays sunrise and sunset times in the panel, including civil, nautical, and astronomical twilight.",
     "version": 1,
     "shell-version": ["45", "46", "47"],
-    "url": "https://github.com/mutex-io/gnome-shell-extension-sunrise-sunset",
+    "url": "https://github.com/caseykelso/gnome-shell-extension-sunrise-sunset",
     "gettext-domain": "sunrise-sunset@mutex.io",
     "author": "mutex.io",
     "email": "opensource@mutex.io"
