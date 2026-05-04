@@ -55,7 +55,7 @@ package: schemas
 	@cp -R $(EXTENSION_DIR)/icons $(BUILD_DIR)/$(EXTENSION_UUID)/
 	@cp -R $(EXTENSION_DIR)/schemas $(BUILD_DIR)/$(EXTENSION_UUID)/
 	@mkdir -p $(DIST_DIR)
-	@cd $(BUILD_DIR) && zip -r $(DIST_DIR)/$(PACKAGE_NAME) $(EXTENSION_UUID)/
+	@cd $(BUILD_DIR)/$(EXTENSION_UUID) && zip -r $(DIST_DIR)/$(PACKAGE_NAME) .
 	@echo "Package: $(DIST_DIR)/$(PACKAGE_NAME)"
 
 install: schemas
