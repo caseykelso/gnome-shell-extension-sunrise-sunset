@@ -23,7 +23,7 @@ BUILD_NUMBER ?= $(RELEASE_VERSION)
 
 J ?= $(shell if command -v nproc >/dev/null 2>&1; then nproc; elif command -v sysctl >/dev/null 2>&1; then sysctl -n hw.ncpu; else echo 4; fi)
 
-.PHONY: default all ci build schemas compile-schemas package install deploy uninstall clean dist check-deps lint version test
+.PHONY: default all ci build schemas compile-schemas package install deploy uninstall clean dist check-deps lint version test gnome-nested restart-shell
 
 default: all
 
@@ -122,6 +122,45 @@ test:
 	else \
 		echo "ERROR: gjs not found. Install with: sudo apt install gjs"; \
 		exit 1; \
+	fi
+
+gnome-nested:
+	@echo "Starting nested GNOME Shell..."
+	@dbus-run-session -- gnome-shell --nested --wayland
+
+RESTART_SHELL_STATE := /tmp/gnome-shell-windows.state
+
+restart-shell:
+	@echo "Saving window positions..."
+	@if ! command -v wmctrl >/dev/null 2>&1; then \
+		echo "ERROR: wmctrl not found. Install with: sudo apt install wmctrl"; \
+		exit 1; \
+	fi
+	@wmctrl -lG | grep -v "Desktop" | grep -v "^$$" > $(RESTART_SHELL_STATE) 2>/dev/null || true
+	@echo "Saved $$(wc -l < $(RESTART_SHELL_STATE) || echo 0) windows"
+	@echo "Restarting GNOME Shell..."
+	@dbus-send --session --type=method_call \
+		--dest=org.gnome.Shell \
+		/org/gnome/Shell \
+		'org.gnome.Shell.Eval' \
+		string:'Meta.restart("Restarting...")' >/dev/null 2>&1 || true
+	@echo "Waiting for shell to restart..."
+	@sleep 4
+	@echo "Restoring window positions..."
+	@if [ -f $(RESTART_SHELL_STATE) ]; then \
+		while IFS= read -r line; do \
+			wid=$$(echo "$$line" | awk '{print $$1}'); \
+			x=$$(echo "$$line" | awk '{print $$3}'); \
+			y=$$(echo "$$line" | awk '{print $$4}'); \
+			w=$$(echo "$$line" | awk '{print $$5}'); \
+			h=$$(echo "$$line" | awk '{print $$6}'); \
+			if [ -n "$$wid" ] && [ -n "$$x" ] && [ -n "$$y" ] && [ -n "$$w" ] && [ -n "$$h" ]; then \
+				wmctrl -i -r $$wid -e 0,$$x,$$y,$$w,$$h 2>/dev/null || true; \
+			fi; \
+		done < $(RESTART_SHELL_STATE); \
+		echo "Restored window positions"; \
+	else \
+		echo "No saved state found"; \
 	fi
 
 dist: package

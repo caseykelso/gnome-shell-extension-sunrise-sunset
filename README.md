@@ -75,6 +75,9 @@ This runs all targets: schema compilation and package building.
 | `make uninstall` | Remove installed extension |
 | `make clean` | Remove build artifacts |
 | `make dist` | Same as `package` |
+| `make test` | Run unit tests |
+| `make gnome-nested` | Start nested GNOME Shell for testing |
+| `make restart-shell` | Restart GNOME Shell (restores window positions) |
 | `make version` | Print current version from git tag or branch |
 | `make check-deps` | Verify build dependencies |
 
@@ -94,6 +97,73 @@ This will:
 5. Auto-reload the extension (if GNOME Shell is running)
 
 For rapid iteration with live reload, just keep running `make deploy`.
+
+## Development & Testing
+
+### Testing Changes Without Disrupting Your Desktop
+
+There are two ways to test extension changes during development:
+
+#### Option 1: Alt+F2+r (X11 only)
+
+On X11 sessions, restart GNOME Shell in-place:
+
+```
+Alt+F2, type "r", press Enter
+```
+
+This reloads the shell with your changes but **resets window positions**. Fast but disruptive.
+
+#### Option 2: Make restart-shell (X11 only)
+
+Restart the shell while preserving window positions:
+
+```bash
+make restart-shell
+```
+
+This saves window positions to `/tmp/gnome-shell-windows.state`, restarts the shell via dbus, waits 4 seconds, then restores all windows to their original positions.
+
+Requires: `wmctrl` (`sudo apt install wmctrl`)
+
+#### Option 2: Nested Shell (Recommended)
+
+Run a separate GNOME Shell instance in a window:
+
+```bash
+make gnome-nested
+```
+
+This opens a nested GNOME Shell inside your desktop. Your actual session is untouched, so you keep your window layout. Close the nested shell window when done.
+
+Requirements:
+- Wayland session (default on most modern distros)
+- The nested window opens immediately
+
+#### Option 3: Toggling Extension
+
+Disable/enable the extension without shell restart:
+
+```bash
+gnome-extensions disable sunrise-sunset@mutex.io
+gnome-extensions enable sunrise-sunset@mutex.io
+```
+
+### Running Unit Tests
+
+```bash
+make test
+```
+
+Tests verify:
+- Sunrise/sunset calculations match reference data from timeanddate.com
+- Twilight ordering is correct (astronomical → nautical → civil → sunrise)
+- Timezone detection works
+- Edge cases (summer/winter solstice)
+
+### Test Data
+
+Reference times are from [timeanddate.com](https://www.timeanddate.com/sun/canada/vancouver). The algorithm uses the NOAA solar position equations with standard atmospheric refraction.
 
 ## Releases
 
