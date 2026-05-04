@@ -19,9 +19,10 @@ A GNOME Shell extension that displays sunrise and sunset times in the top panel,
 
 ## Compatibility
 
-- GNOME Shell 45, 46, 47
+- GNOME Shell 45 to 49
 - Ubuntu 24.04 LTS (GNOME 46)
 - Fedora 39+ (GNOME 45+)
+- Bluefin Sehll 49.5
 
 ## Prerequisites
 
