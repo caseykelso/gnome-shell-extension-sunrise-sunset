@@ -37,7 +37,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
             this._label = new St.Label({
                 style_class: 'sunrise-sunset-panel-label',
-                y_align: Clutter.ActorAlign.CENTER,
+                y_align: St.Align.CENTER,
             });
 
             this._box.add_child(this._icon);
@@ -128,132 +128,132 @@ const SunriseSunsetIndicator = GObject.registerClass(
         this._refresh();
     }
 
-        _connectSettings(settings) {
-            if (this._settingsChangedId) return;
-            this._settingsChangedId = settings.connect('changed', () => {
-                this._loadLocation();
+    _connectSettings(settings) {
+        if (this._settingsChangedId) return;
+        this._settingsChangedId = settings.connect('changed', () => {
+            this._loadLocation();
+        });
+        this._settings = settings;
+    }
+
+    _refresh() {
+        if (!this._geo) return;
+
+        const times = SunCalculator.computeAllSunTimes(
+            this._geo.lat,
+            this._geo.lon
+        );
+
+        if (times.sunrise && times.sunset) {
+            this._label.set_text(`${times.sunrise} \u2192 ${times.sunset}`);
+        } else {
+            this._label.set_text('N/A');
+        }
+
+        this._updateMenu(times);
+    }
+
+    _updateMenu(times) {
+        this._rowsBox.destroy_all_children();
+
+        const date = new Date();
+        const options = { month: 'long', day: 'numeric', year: 'numeric' };
+        const dateStr = date.toLocaleDateString(undefined, options);
+        this._menuTitle.set_text(`Sunrise & Sunset\n${dateStr}`);
+
+        if (this._geo) {
+            this._locationLabel.set_text(
+                `${this._geo.name}`
+            );
+        }
+
+        const rows = [
+            {
+                label: 'Sunrise / Sunset',
+                sunrise: times.sunrise,
+                sunset: times.sunset,
+                cssClass: 'standard',
+            },
+            {
+                label: 'Civil Twilight',
+                sunrise: times.civil_sunrise,
+                sunset: times.civil_sunset,
+                cssClass: 'civil',
+            },
+            {
+                label: 'Nautical Twilight',
+                sunrise: times.nautical_sunrise,
+                sunset: times.nautical_sunset,
+                cssClass: 'nautical',
+            },
+            {
+                label: 'Astronomical Twilight',
+                sunrise: times.astronomical_sunrise,
+                sunset: times.astronomical_sunset,
+                cssClass: 'astronomical',
+            },
+        ];
+
+        for (const row of rows) {
+            const rowBox = new St.BoxLayout({
+                style_class: `sunrise-sunset-row ${row.cssClass}`,
             });
-            this._settings = settings;
+
+            const nameLabel = new St.Label({
+                style_class: 'sunrise-sunset-row-name',
+                text: row.label,
+            });
+
+            const timeBox = new St.BoxLayout({
+                style_class: 'sunrise-sunset-row-times',
+            });
+
+            const sunriseLabel = new St.Label({
+                style_class: 'sunrise-sunset-time sunrise',
+                text: row.sunrise || '--:--',
+            });
+
+            const separator = new St.Label({
+                style_class: 'sunrise-sunset-time-separator',
+                text: '\u2192',
+            });
+
+            const sunsetLabel = new St.Label({
+                style_class: 'sunrise-sunset-time sunset',
+                text: row.sunset || '--:--',
+            });
+
+            timeBox.add_child(sunriseLabel);
+            timeBox.add_child(separator);
+            timeBox.add_child(sunsetLabel);
+
+            rowBox.add_child(nameLabel);
+            rowBox.add_child(timeBox);
+
+            this._rowsBox.add_child(rowBox);
         }
+    }
 
-        _refresh() {
-            if (!this._geo) return;
-
-            const times = SunCalculator.computeAllSunTimes(
-                this._geo.lat,
-                this._geo.lon
-            );
-
-            if (times.sunrise && times.sunset) {
-                this._label.set_text(`${times.sunrise} \u2192 ${times.sunset}`);
-            } else {
-                this._label.set_text('N/A');
+    _startRefreshTimer() {
+        this._timeoutId = GLib.timeout_add_seconds(
+            GLib.PRIORITY_DEFAULT,
+            300,
+            () => {
+                this._refresh();
+                return GLib.SOURCE_CONTINUE;
             }
+        );
+    }
 
-            this._updateMenu(times);
+    destroy() {
+        if (this._timeoutId) {
+            GLib.source_remove(this._timeoutId);
+            this._timeoutId = null;
         }
-
-        _updateMenu(times) {
-            this._rowsBox.destroy_all_children();
-
-            const date = new Date();
-            const options = { month: 'long', day: 'numeric', year: 'numeric' };
-            const dateStr = date.toLocaleDateString(undefined, options);
-            this._menuTitle.set_text(`Sunrise & Sunset\n${dateStr}`);
-
-            if (this._geo) {
-                this._locationLabel.set_text(
-                    `${this._geo.name}`
-                );
-            }
-
-            const rows = [
-                {
-                    label: 'Sunrise / Sunset',
-                    sunrise: times.sunrise,
-                    sunset: times.sunset,
-                    cssClass: 'standard',
-                },
-                {
-                    label: 'Civil Twilight',
-                    sunrise: times.civil_sunrise,
-                    sunset: times.civil_sunset,
-                    cssClass: 'civil',
-                },
-                {
-                    label: 'Nautical Twilight',
-                    sunrise: times.nautical_sunrise,
-                    sunset: times.nautical_sunset,
-                    cssClass: 'nautical',
-                },
-                {
-                    label: 'Astronomical Twilight',
-                    sunrise: times.astronomical_sunrise,
-                    sunset: times.astronomical_sunset,
-                    cssClass: 'astronomical',
-                },
-            ];
-
-            for (const row of rows) {
-                const rowBox = new St.BoxLayout({
-                    style_class: `sunrise-sunset-row ${row.cssClass}`,
-                });
-
-                const nameLabel = new St.Label({
-                    style_class: 'sunrise-sunset-row-name',
-                    text: row.label,
-                });
-
-                const timeBox = new St.BoxLayout({
-                    style_class: 'sunrise-sunset-row-times',
-                });
-
-                const sunriseLabel = new St.Label({
-                    style_class: 'sunrise-sunset-time sunrise',
-                    text: row.sunrise || '--:--',
-                });
-
-                const separator = new St.Label({
-                    style_class: 'sunrise-sunset-time-separator',
-                    text: '\u2192',
-                });
-
-                const sunsetLabel = new St.Label({
-                    style_class: 'sunrise-sunset-time sunset',
-                    text: row.sunset || '--:--',
-                });
-
-                timeBox.add_child(sunriseLabel);
-                timeBox.add_child(separator);
-                timeBox.add_child(sunsetLabel);
-
-                rowBox.add_child(nameLabel);
-                rowBox.add_child(timeBox);
-
-                this._rowsBox.add_child(rowBox);
-            }
+        if (this._settingsChangedId && this._settings) {
+            this._settings.disconnect(this._settingsChangedId);
+            this._settingsChangedId = null;
         }
-
-        _startRefreshTimer() {
-            this._timeoutId = GLib.timeout_add_seconds(
-                GLib.PRIORITY_DEFAULT,
-                300,
-                () => {
-                    this._refresh();
-                    return GLib.SOURCE_CONTINUE;
-                }
-            );
-        }
-
-        destroy() {
-            if (this._timeoutId) {
-                GLib.source_remove(this._timeoutId);
-                this._timeoutId = null;
-            }
-            if (this._settingsChangedId && this._settings) {
-                this._settings.disconnect(this._settingsChangedId);
-                this._settingsChangedId = null;
-            }
         super.destroy();
     }
 }
@@ -279,5 +279,5 @@ export default class SunriseSunsetExtension extends Extension {
 }
 
 function init(meta) {
-    return new Extension(meta.uuid);
+    return new Extension(meta);
 }

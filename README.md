@@ -2,7 +2,7 @@
 
 A GNOME Shell extension that displays sunrise and sunset times in the top panel, with detailed breakdowns including civil, nautical, and astronomical twilight.
 
-![Sunrise Sunset Extension](https://img.shields.io/badge/GNOME-Shell%2045--47-blue)
+![Sunrise Sunset Extension](https://img.shields.io/badge/GNOME-Shell%2045--51-blue)
 
 ## Features
 
@@ -19,7 +19,7 @@ A GNOME Shell extension that displays sunrise and sunset times in the top panel,
 
 ## Compatibility
 
-- GNOME Shell 45 to 49
+- GNOME Shell 45 to 51
 - Ubuntu 24.04 LTS (GNOME 46)
 - Fedora 39+ (GNOME 45+)
 - Bluefin Sehll 49.5
