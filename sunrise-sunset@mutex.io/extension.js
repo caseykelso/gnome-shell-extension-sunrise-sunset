@@ -57,7 +57,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
             this._menuContent = new St.BoxLayout({
                 style_class: 'sunrise-sunset-menu-content',
-                vertical: true,
+                orientation: Clutter.Orientation.VERTICAL,
             });
 
             this._menuItem.add_child(this._menuContent);
@@ -78,7 +78,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
             this._rowsBox = new St.BoxLayout({
                 style_class: 'sunrise-sunset-rows',
-                vertical: true,
+                orientation: Clutter.Orientation.VERTICAL,
             });
             this._menuContent.add_child(this._rowsBox);
 
