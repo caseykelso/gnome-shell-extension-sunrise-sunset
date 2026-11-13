@@ -37,7 +37,7 @@ const SunriseSunsetIndicator = GObject.registerClass(
 
             this._label = new St.Label({
                 style_class: 'sunrise-sunset-panel-label',
-                y_align: St.Align.CENTER,
+                y_align: Clutter.ActorAlign.CENTER,
             });
 
             this._box.add_child(this._icon);
@@ -276,8 +276,4 @@ export default class SunriseSunsetExtension extends Extension {
             this._indicator = null;
         }
     }
-}
-
-function init(meta) {
-    return new Extension(meta);
 }
